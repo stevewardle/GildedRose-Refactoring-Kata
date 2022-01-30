@@ -1,53 +1,82 @@
 # -*- coding: utf-8 -*-
 
-class ItemUpdater:
-    def __init__(self):
-        pass
+from abc import ABC, abstractmethod
 
+
+class ItemUpdater(ABC):
     def update(self, item):
         self.update_sell_in(item)
         self.update_quality(item)
 
+    @abstractmethod
     def update_sell_in(self, item):
-       if item.name != "Sulfuras, Hand of Ragnaros":
-            item.sell_in = item.sell_in - 1
+        pass
+
+    @abstractmethod
+    def update_quality(self, item):
+        pass
+
+
+class BasicItemUpdater(ItemUpdater):
+    def update_sell_in(self, item):
+        item.sell_in -= 1
 
     def update_quality(self, item):
-        if item.name != "Aged Brie" and item.name != "Backstage passes to a TAFKAL80ETC concert":
-            if item.quality > 0:
-                if item.name != "Sulfuras, Hand of Ragnaros":
-                        item.quality = item.quality - 1
-        else:
-            if item.quality < 50:
-                item.quality = item.quality + 1
-                if item.name == "Backstage passes to a TAFKAL80ETC concert":
-                    if item.sell_in < 10:
-                        if item.quality < 50:
-                            item.quality = item.quality + 1
-                    if item.sell_in < 5:
-                        if item.quality < 50:
-                            item.quality = item.quality + 1
- 
+        if item.quality > 0:
+            item.quality -= 1
+        if item.sell_in < 0 and item.quality > 0:
+            item.quality -= 1
+
+
+class MaturingItemUpdater(ItemUpdater):
+    def update_sell_in(self, item):
+        item.sell_in -= 1
+
+    def update_quality(self, item):
+        if item.quality < 50:
+            item.quality += 1
+        if item.sell_in < 0 and item.quality < 50:
+            item.quality += 1
+
+
+class LegendaryItemUpdater(ItemUpdater):
+    def update_sell_in(self, item):
+        pass
+
+    def update_quality(self, item):
+        pass
+
+
+class EventItemUpdater(ItemUpdater):
+    def update_sell_in(self, item):
+        item.sell_in -= 1
+
+    def update_quality(self, item):
+        if item.quality < 50:
+            item.quality += 1
+            if item.sell_in < 10 and item.quality < 50:
+                item.quality += 1
+            if item.sell_in < 5 and item.quality < 50:
+                item.quality += 1
         if item.sell_in < 0:
-            if item.name != "Aged Brie":
-                if item.name != "Backstage passes to a TAFKAL80ETC concert":
-                    if item.quality > 0:
-                        if item.name != "Sulfuras, Hand of Ragnaros":
-                            item.quality = item.quality - 1
-                else:
-                    item.quality = item.quality - item.quality
-            else:
-                if item.quality < 50:
-                    item.quality = item.quality + 1        
+            item.quality = 0
+
 
 class GildedRose:
+
+    updater_mapping = {
+        "Aged Brie": MaturingItemUpdater(),
+        "Backstage passes to a TAFKAL80ETC concert": EventItemUpdater(),
+        "Sulfuras, Hand of Ragnaros": LegendaryItemUpdater(),
+        }
 
     def __init__(self, items):
         self.items = items
 
     def update_quality(self):
         for item in self.items:
-            item_updater = ItemUpdater()
+            item_updater = self.updater_mapping.get(
+                item.name, BasicItemUpdater())
             item_updater.update(item)
 
 
