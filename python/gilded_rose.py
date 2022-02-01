@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*-
-
-from catalogue import UPDATER_MAPPING
+from catalogue import get_updater
 
 
 class GildedRose:
     def __init__(self, items):
         self.items = items
 
-    def update_quality(self):
+    def update_items(self):
         for item in self.items:
-            item_updater = UPDATER_MAPPING[item.name]
+            item_updater = get_updater(item)
             item_updater.update(item)
 
 
