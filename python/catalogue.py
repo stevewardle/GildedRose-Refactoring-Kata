@@ -3,7 +3,7 @@ from item_updater import (
     MaturingItemUpdater,
     EventItemUpdater,
     LegendaryItemUpdater,
-    ConjuredItemUpdater,
+    ConjuredItemDecorator,
 )
 
 # In a real world application this information could be stored
@@ -22,7 +22,8 @@ _DATABASE = {
         "item_type": "legendary",
         },
     "Conjured Mana Cake": {
-        "item_type": "conjured",
+        "item_type": "basic",
+        "conjured": True,
         },
     }
 
@@ -36,12 +37,17 @@ def get_updater(item):
     """
     db_entry = _DATABASE.get(item.name, None)
     if db_entry is None:
+        return BasicItemUpdater()
+
+    if db_entry["item_type"] == "basic":
         updater = BasicItemUpdater()
 
     elif db_entry["item_type"] == "maturing":
         updater = MaturingItemUpdater()
 
     elif db_entry["item_type"] == "event":
+        # The event item type has extra information to
+        # define the hype thresholds
         hype_thresholds = list(map(
             int, db_entry["hype_thresholds"].split()))
         updater = EventItemUpdater(
@@ -50,7 +56,9 @@ def get_updater(item):
     elif db_entry["item_type"] == "legendary":
         updater = LegendaryItemUpdater()
 
-    elif db_entry["item_type"] == "conjured":
-        updater = ConjuredItemUpdater()
+    # With the base updater selected, apply any decorators
+    # which modify the behaviour of the updater
+    if "conjured" in db_entry and db_entry["conjured"]:
+        updater = ConjuredItemDecorator(updater)
 
     return updater

@@ -1,7 +1,7 @@
 from gilded_rose import Item, GildedRose
 from item_updater import (
     BasicItemUpdater,
-    ConjuredItemUpdater,
+    ConjuredItemDecorator,
     )
 
 
@@ -49,10 +49,10 @@ class TestBasicItemUpdater:
         assert item.quality == 7
 
 
-class TestConjuredItemUpdater:
+class TestConjuredItemDecorator:
     def test_update_normal(self):
         item = Item(name="foo", sell_in=10, quality=9)
-        updater = ConjuredItemUpdater()
+        updater = ConjuredItemDecorator(BasicItemUpdater())
         updater.update(item)
         assert item.name == "foo"
         assert item.sell_in == 9
@@ -60,7 +60,7 @@ class TestConjuredItemUpdater:
 
     def test_update_late(self):
         item = Item(name="foo", sell_in=0, quality=9)
-        updater = ConjuredItemUpdater()
+        updater = ConjuredItemDecorator(BasicItemUpdater())
         updater.update(item)
         assert item.name == "foo"
         assert item.sell_in == -1

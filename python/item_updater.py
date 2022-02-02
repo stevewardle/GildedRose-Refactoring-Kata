@@ -41,17 +41,6 @@ class BasicItemUpdater(ItemUpdater):
             item.quality -= self.ITEM_QUALITY_DECAY_RATE
 
 
-class ConjuredItemUpdater(ItemUpdater):
-    """
-    A Conjured item decays at the regular rate but then
-    at double the rate after its sell date passes
-    """
-    def update_quality(self, item):
-        item.quality -= self.ITEM_QUALITY_DECAY_RATE*2
-        if item.sell_in < 0:
-            item.quality -= self.ITEM_QUALITY_DECAY_RATE*2
-
-
 class MaturingItemUpdater(ItemUpdater):
     """
     A Maturing item increases in value at the regular
@@ -98,3 +87,32 @@ class EventItemUpdater(ItemUpdater):
                 item.quality += self.ITEM_QUALITY_DECAY_RATE
         if item.sell_in < 0:
             item.quality = self.ITEM_QUALITY_MIN
+
+
+class ItemUpdaterDecorator(ItemUpdater, ABC):
+    """
+    Decorator which can change the behaviour of another
+    Item Updater by wrapping it
+    e.g. ItemUpdaterDecorator(ItemUpdater())
+    """
+    def __init__(self, item_updater):
+        self._item_updater = item_updater
+
+    def update_sell_in(self, item):
+        self._item_updater.update_sell_in(item)
+
+    def cap_quality(self, item):
+        self._item_updater.cap_quality(item)
+
+
+class ConjuredItemDecorator(ItemUpdaterDecorator):
+    """
+    A Conjured item behaves the same as the regular
+    version of the item but decays twice as fast
+    """
+    def __init__(self, item_updater):
+        super().__init__(item_updater)
+        self._item_updater.ITEM_QUALITY_DECAY_RATE *= 2
+
+    def update_quality(self, item):
+        self._item_updater.update_quality(item)
